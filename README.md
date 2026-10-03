@@ -176,6 +176,39 @@ Run `refresh-posters` once using the Functions dashboard with the cron Authoriza
 header to populate remote images immediately. Do not invoke `mailer` with real
 subscribers until you are ready to send invitations.
 
+#### Testing and troubleshooting poster refresh
+
+In PowerShell, use `curl.exe` with a plain URL (not Markdown link syntax).
+This single-line command assumes the actual cron secret is already in your shell's
+`CRON_SECRET` environment variable; the braces used for placeholders are not part
+of the secret:
+
+```powershell
+curl.exe -i -X POST "https://YOUR_PROJECT.supabase.co/functions/v1/refresh-posters" -H "Authorization: Bearer $env:CRON_SECRET" -H "Content-Type: application/json"
+```
+
+A local `.env` file is not automatically loaded by PowerShell or uploaded to
+Supabase. Set `TMDB_TOKEN` and `CRON_SECRET` in **Edge Functions > Secrets** for the
+same project where you deployed. TMDB_TOKEN must be the **API Read Access Token**,
+not the shorter API key. Vault's `cinema_cron_secret` is a separate copy used by the
+scheduler; creating it does not set the function's `CRON_SECRET` environment variable.
+
+- **401 Unauthorized:** the bearer value does not match the function's cron secret.
+- **503 with `BOOT_ERROR`:** inspect the function's Logs for `worker boot error`;
+  the runtime failed before the request handler ran.
+- **503 with `stage: configuration` and `setting`:** add the named missing function
+  secret. Supabase normally supplies its URL and service-role key automatically.
+- **503 with `stage: catalog_read`:** check migrations and table permissions in this
+  project. `PGRST205`/`42P01` indicate a missing table/schema cache entry; `42501`
+  indicates insufficient database permissions.
+- **502 with `failed` greater than zero:** the catalog loaded, but a TMDB request or
+  poster update failed. Check the TMDB token and function/provider availability.
+- **200 with zero updates:** check that `supabase/seed.sql` was applied and active
+  movies have IMDb IDs and matching TMDB posters.
+
+Older deployments return only `Poster refresh unavailable` for application 503s.
+Redeploy `refresh-posters` from this repository to get structured diagnostics.
+
 ### 4. GitHub Pages and Cloudflare
 
 In the repository's Actions variables, add these **public** settings:

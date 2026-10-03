@@ -13,7 +13,7 @@ async function loadFunction(name, context) {
         const ctx=globalThis.__edgeTest;
         export const admin=()=>ctx.db;
         export const rpc=(_db,name,args)=>ctx.rpc(name,args);
-        export const secret=name=>{if(!ctx.secrets[name])throw new Error('Missing secret');return ctx.secrets[name];};
+        export const secret=name=>{if(!ctx.secrets[name])throw new Error('Missing server setting: '+name);return ctx.secrets[name];};
         export const authorizedCron=req=>req.headers.get('Authorization')==='Bearer '+ctx.secrets.CRON_SECRET;
       `}));
     }
@@ -68,4 +68,21 @@ test('Edge mailer rejects outsiders, skips ineligible recipients, and preserves 
 test('Edge poster refresh compiles and rejects unauthenticated calls',async()=>{
   const handler=await loadFunction('refresh-posters',{secrets:{CRON_SECRET:'cron'}});
   assert.equal((await handler(new Request('https://example.test/posters',{method:'POST'}))).status,401);
+});
+
+test('poster setup failures identify the missing setting without exposing secrets',async()=>{
+  const handler=await loadFunction('refresh-posters',{secrets:{CRON_SECRET:'private-cron'},db:{}});
+  const response=await handler(new Request('https://example.test/posters',{method:'POST',headers:{Authorization:'Bearer private-cron'}}));
+  assert.equal(response.status,503);
+  assert.deepEqual(await response.json(),{error:'Poster refresh unavailable',stage:'configuration',setting:'TMDB_TOKEN'});
+});
+
+test('poster catalog failures expose a database code but not raw error details',async()=>{
+  const handler=await loadFunction('refresh-posters',{
+    secrets:{CRON_SECRET:'private-cron',TMDB_TOKEN:'private-tmdb'},
+    db:{from:()=>({select:()=>({eq:async()=>({data:null,error:{code:'PGRST205',message:'sensitive database details'}})})})},
+  });
+  const response=await handler(new Request('https://example.test/posters',{method:'POST',headers:{Authorization:'Bearer private-cron'}}));
+  assert.equal(response.status,503);
+  assert.deepEqual(await response.json(),{error:'Poster refresh unavailable',stage:'catalog_read',code:'PGRST205'});
 });
