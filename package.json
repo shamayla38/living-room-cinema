@@ -1,0 +1,20 @@
+{
+  "name": "living-room-cinema",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "playwright test",
+    "preview": "node scripts/serve.mjs",
+    "check": "npm run test && npm run build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.63.0",
+    "esbuild": "^0.28.2"
+  }
+}

@@ -1,0 +1,10 @@
+project_id = "living-room-cinema"
+
+[functions.mailer]
+verify_jwt = false
+
+[functions.unsubscribe]
+verify_jwt = false
+
+[functions.refresh-posters]
+verify_jwt = false

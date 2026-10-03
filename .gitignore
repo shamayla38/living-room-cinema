@@ -3,3 +3,9 @@
 .env.*
 !.env.example
 node_modules/
+.npm-cache/
+dist/app.bundle.js
+dist/config.js
+supabase/.temp/
+test-results/
+playwright-report/
