@@ -4,8 +4,10 @@ import { writeFile } from 'node:fs/promises';
 const url = process.env.SUPABASE_URL || '';
 const key = process.env.SUPABASE_PUBLISHABLE_KEY || '';
 const turnstile = process.env.TURNSTILE_SITE_KEY || '';
-if (process.env.CI && (!url || !key || !turnstile)) {
-  throw new Error('Set SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and TURNSTILE_SITE_KEY repository variables before deployment.');
+const missing = Object.entries({ SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: key, TURNSTILE_SITE_KEY: turnstile })
+  .filter(([, value]) => !value.trim()).map(([name]) => name);
+if (process.env.CI && missing.length) {
+  throw new Error(`Missing build configuration: ${missing.join(', ')}. In the repository running this workflow, open Settings > Secrets and variables > Actions > Variables and add these as Repository variables (not Repository secrets). The Pages workflow reads vars.*, not secrets.*. After pushing workflow changes, start a new Run workflow on that branch.`);
 }
 if (url && new URL(url).protocol !== 'https:') throw new Error('Supabase URL must use HTTPS.');
 if (key.startsWith('sb_secret_')) throw new Error('Never publish a Supabase secret key.');
