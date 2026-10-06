@@ -36,7 +36,7 @@ end
 $reset$;
 
 `;
-const files = ['supabase/migrations/202610020001_cinema.sql', 'supabase/migrations/202610020002_mail.sql', 'supabase/seed.sql'];
+const files = ['supabase/migrations/202610020001_cinema.sql', 'supabase/migrations/202610020002_mail.sql', 'supabase/migrations/202610060001_fix_open_round.sql', 'supabase/seed.sql'];
 const chunks = await Promise.all(files.map(async path => `-- Source: ${path}\n${await readFile(path,'utf8')}\n`));
 await writeFile('supabase/reset-and-install.sql', reset + chunks.join('\n') + `
 notify pgrst, 'reload schema';

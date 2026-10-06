@@ -21,7 +21,7 @@ test('PostgreSQL authorization, voting, booking, and delivery lifecycle', async 
       ('${ids.host}','host@example.test',now(),false),('${ids.guest}',null,null,true),
       ('${ids.alice}','alice@example.test',now(),false),('${ids.bob}','bob@example.test',now(),false);
   `);
-  for (const file of ['202610020001_cinema.sql','202610020002_mail.sql']) {
+  for (const file of ['202610020001_cinema.sql','202610020002_mail.sql','202610060001_fix_open_round.sql']) {
     await db.exec(await readFile(`supabase/migrations/${file}`, 'utf8'));
   }
   await db.exec(await readFile('supabase/seed.sql', 'utf8'));
@@ -85,6 +85,15 @@ test('PostgreSQL authorization, voting, booking, and delivery lifecycle', async 
     await assert.rejects(rpc('host','publish_event',['2','2099-06-02T20:00:00','America/New_York','Sofa',1]),/Cancel the current/);
     await rpc('host','open_round',[new Date(Date.now()+86400000).toISOString()]);
     assert.deepEqual((await rpc('guest','cinema_state')).counts,{});
+    const reopened = await rpc(null,'cinema_state',[],'anon');
+    assert.ok(new Date(reopened.round.closes_at) > new Date());
+    assert.notEqual(reopened.round.id, round);
+    await rpc('guest','set_vote',[reopened.round.id,'1',true]);
+    assert.equal((await rpc('guest','cinema_state')).counts['1'],1);
+    await rpc('guest','set_vote',[reopened.round.id,'1',false]);
+    // PGlite lacks Supabase's safeupdate extension: guard its required predicate.
+    const definition = (await db.query("select pg_get_functiondef('public.open_round(timestamptz)'::regprocedure) as sql")).rows[0].sql;
+    assert.match(definition, /update public\.settings set round_id=result where id = true/i);
     await assert.rejects(rpc('guest','set_vote',[round,'1',true]),/round changed/);
   });
   await t.test('verified RSVP is idempotent, capacity bounded, and cancellable', async () => {

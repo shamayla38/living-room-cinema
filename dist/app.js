@@ -21,7 +21,11 @@ const field = (name, label, type = 'text', value = '', extra = '') =>
 
 function toast(message) {
   $('#toast').textContent = message;
-  $('#toast').style.display = 'block';
+  $('#toast').style.display = dialog.open ? 'none' : 'block';
+  const feedback = $('#dialog-status');
+  feedback.textContent = message;
+  feedback.hidden = !dialog.open;
+  if (dialog.open) feedback.scrollIntoView({ block: 'nearest' });
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $('#toast').style.display = 'none', 7000);
 }
@@ -38,6 +42,8 @@ function clearCaptcha() {
 }
 function openDialog(html) {
   clearCaptcha();
+  $('#dialog-status').hidden = true;
+  $('#dialog-status').textContent = '';
   $('#dialog-content').innerHTML = html;
   if (!dialog.open) dialog.showModal();
 }
@@ -224,9 +230,16 @@ async function host() {
     await host(); toast('Screening published. Invitations are scheduled automatically.');
   });
   form('#round-form', async f => {
+    const cutoff = new Date(String(f.get('cutoff')));
+    if (!Number.isFinite(cutoff.getTime()) || cutoff <= new Date()) {
+      throw new Error('Choose a future date and time for voting to close.');
+    }
     if (!window.confirm('Start a new round with fresh vote counts?')) return;
-    await rpc(member, 'open_round', { p_closes_at: new Date(String(f.get('cutoff'))).toISOString() });
-    await host(); toast('New voting round opened.');
+    await rpc(member, 'open_round', { p_closes_at: cutoff.toISOString() });
+    await refresh();
+    if (!votingOpen()) throw new Error('The request completed, but voting still appears closed. Please check the cutoff and refresh before trying again.');
+    dialog.close();
+    toast(`Voting is open until ${new Date(state.round.closes_at).toLocaleString()}.`);
   });
   document.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>review(data.suggestions.find(s=>s.id===b.dataset.review)));
 }
