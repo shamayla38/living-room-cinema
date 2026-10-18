@@ -23,12 +23,13 @@ test('manual reset replaces an incompatible schema and preserves Auth users',asy
     const reset=await readFile('supabase/reset-and-install.sql','utf8');
     for(let run=0;run<2;run++) {
       await db.exec(reset);
-      assert.equal((await db.query('select count(*)::int n from public.movies')).rows[0].n,32);
+      assert.equal((await db.query('select count(*)::int n from public.movies')).rows[0].n,40);
       assert.equal((await db.query('select count(*)::int n from auth.users')).rows[0].n,1);
       assert.equal((await db.query('select value from vault.test_secret')).rows[0].value,'preserved');
       assert.equal((await db.query("select data_type from information_schema.columns where table_schema='public' and table_name='movies' and column_name='id'")).rows[0].data_type,'text');
       assert.equal((await db.query("select to_regclass('public.old_votes') as name")).rows[0].name,null);
-      assert.equal((await db.query('select public.cinema_state() as state')).rows[0].state.movies.length,32);
+      assert.equal((await db.query('select public.cinema_state() as state')).rows[0].state.movies.length,39);
+      assert.equal((await db.query('select public.cinema_state() as state')).rows[0].state.watched[0].title,'Mulholland Drive');
     }
   } finally {await db.close();}
 });

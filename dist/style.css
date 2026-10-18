@@ -6,3 +6,5 @@
 [hidden]{display:none!important}.info-page{max-width:850px;padding-top:40px;padding-bottom:60px}.info-page h1{margin-top:30px}dialog button:not(.close):not(.text-button){background:var(--red);color:white;border:1px solid var(--red);border-radius:5px;padding:10px 16px;margin-top:10px}dialog select{max-width:100%}dialog .consent input{display:inline-block;width:auto}nav{flex-wrap:wrap}#captcha{margin:16px 0}
 
 #dialog-status:not([hidden]){position:sticky;top:0;z-index:2;padding:14px 16px;margin:0 0 20px;background:#f1e9dc;color:#252721;border-radius:6px;box-shadow:0 3px 15px #0005;font-size:16px;line-height:1.5;overflow-wrap:anywhere}
+
+#watched-section{margin-top:60px;padding-top:35px;border-top:1px solid var(--line)}.watched-badge{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}

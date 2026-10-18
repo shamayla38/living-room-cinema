@@ -367,6 +367,56 @@ from jsonb_to_recordset('[{"id":"1","title":"Mulholland Drive","year":2001,"genr
 on conflict(id) do nothing;
 
 
+-- Source: supabase/migrations/202610170001_watched_movies.sql
+-- Adds a watched shelf without removing films, votes, screenings, or RSVPs.
+alter table public.movies add column watched boolean not null default false;
+alter table public.movies add constraint watched_movies_are_inactive check (not watched or not active);
+
+create or replace function public.cinema_state() returns jsonb language sql security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'movies', coalesce((select jsonb_agg(to_jsonb(m) order by m.title) from public.movies m where active), '[]'::jsonb),
+    'watched', coalesce((select jsonb_agg(to_jsonb(m) order by m.title) from public.movies m where watched), '[]'::jsonb),
+    'round', (select to_jsonb(r) from public.rounds r join public.settings s on s.round_id=r.id),
+    'counts', coalesce((select jsonb_object_agg(movie_id,n) from (select movie_id,count(*) n from public.votes v join public.settings s on s.round_id=v.round_id group by movie_id) c), '{}'::jsonb),
+    'mine', coalesce((select jsonb_agg(movie_id) from public.votes v join public.settings s on s.round_id=v.round_id where user_id=auth.uid()), '[]'::jsonb),
+    'event', (select to_jsonb(e) || jsonb_build_object('seats_taken',(select count(*) from public.rsvps where event_id=e.id)) from public.events e where starts_at>now() and not cancelled order by starts_at limit 1)
+  );
+$$;
+
+create function public.set_movie_watched(p_movie text, p_watched boolean) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform private.require_host();
+  if p_watched is null then raise exception 'Choose a watched status'; end if;
+  perform 1 from public.settings for update;
+  if p_watched and exists(select 1 from public.events where movie_id=p_movie and not cancelled and starts_at>now()) then
+    raise exception 'This film has an upcoming screening. Mark it watched after the screening.';
+  end if;
+  update public.movies set watched=p_watched, active=not p_watched where id=p_movie;
+  if not found then raise exception 'Film not found'; end if;
+end $$;
+revoke all on function public.set_movie_watched(text,boolean) from public, anon, authenticated;
+grant execute on function public.set_movie_watched(text,boolean) to authenticated;
+
+
+-- Source: supabase/migrations/202610170002_watchlist_additions.sql
+-- Add the requested films, preserving existing catalog records and ballots.
+insert into public.movies(id,title,year,genres,description,poster,imdb,rt)
+select m.id,m.title,m.year,m.genres,m.description,m.poster,m.imdb,m.rt
+from jsonb_to_recordset('[{"id": "film-sunshine-2007", "title": "Sunshine", "year": 2007, "genres": ["Sci-Fi", "Thriller"], "description": "A crew travels toward the dying sun on a desperate mission to reignite it in Danny Boyle’s tense space odyssey.", "poster": "assets/sunshine.jpg", "imdb": {"url": "https://www.imdb.com/title/tt0448134/", "checked": "2026-10-17", "value": 7.2}, "rt": {"value": 77.0, "title": "Sunshine", "url": "https://www.rottentomatoes.com/m/sunshine/", "checked": "2026-10-17"}}, {"id": "film-city-of-god-2002", "title": "City of God", "year": 2002, "genres": ["Crime", "Drama"], "description": "An aspiring photographer grows up amid friendship, ambition, and escalating gang violence in Rio de Janeiro.", "poster": "assets/city-of-god.jpg", "imdb": {"url": "https://www.imdb.com/title/tt0317248/", "checked": "2026-10-17", "value": 8.6}, "rt": {"value": 91.0, "title": "City of God", "url": "https://www.rottentomatoes.com/m/city_of_god", "checked": "2026-10-17"}}, {"id": "film-teenage-sex-and-death-at-camp-miasma-2026", "title": "Teenage Sex and Death at Camp Miasma", "year": 2026, "genres": ["Horror", "Comedy"], "description": "A filmmaker reviving a slasher franchise visits its reclusive original star and enters a strange world of desire and terror.", "poster": "assets/teenage-sex-and-death-at-camp-miasma.jpg", "imdb": {"url": "https://www.imdb.com/title/tt35298123/", "checked": "2026-10-17", "value": 6.5}, "rt": {"value": 94.0, "title": "Teenage Sex and Death at Camp Miasma", "url": "https://www.rottentomatoes.com/m/teenage_sex_and_death_at_camp_miasma", "checked": "2026-10-17"}}, {"id": "film-no-other-choice-2025", "title": "No Other Choice", "year": 2025, "genres": ["Thriller", "Comedy"], "description": "After losing his job, a desperate family man takes competition with other job seekers to murderous extremes.", "poster": "assets/no-other-choice.jpg", "imdb": {"url": "https://www.imdb.com/title/tt1527793/", "checked": "2026-10-17", "value": 7.5}, "rt": {"value": 97.0, "title": "No Other Choice", "url": "https://www.rottentomatoes.com/m/no_other_choice", "checked": "2026-10-17"}}, {"id": "film-fire-of-love-2022", "title": "Fire of Love", "year": 2022, "genres": ["Documentary"], "description": "Archival footage tells the story of volcanologists Katia and Maurice Krafft, united by their love for each other and erupting volcanoes.", "poster": "assets/fire-of-love.jpg", "imdb": {"url": "https://www.imdb.com/title/tt16227014/", "checked": "2026-10-17", "value": 7.6}, "rt": {"value": 98.0, "title": "Fire of Love", "url": "https://www.rottentomatoes.com/m/fire_of_love", "checked": "2026-10-17"}}, {"id": "film-aguirre-the-wrath-of-god-1972", "title": "Aguirre, the Wrath of God", "year": 1972, "genres": ["Adventure", "Drama"], "description": "A Spanish expedition searching the Amazon for El Dorado descends into obsession under a ruthless conquistador.", "poster": "assets/aguirre-the-wrath-of-god.jpg", "imdb": {"url": "https://www.imdb.com/title/tt0068182/", "checked": "2026-10-17", "value": 7.8}, "rt": {"value": 96.0, "title": "Aguirre: The Wrath of God", "url": "https://www.rottentomatoes.com/m/aguirre_the_wrath_of_god", "checked": "2026-10-17"}}, {"id": "film-a-hidden-life-2019", "title": "A Hidden Life", "year": 2019, "genres": ["Drama", "History"], "description": "An Austrian farmer’s refusal to swear loyalty to Hitler tests his faith and his family’s resolve.", "poster": "assets/a-hidden-life.jpg", "imdb": {"url": "https://www.imdb.com/title/tt5827916/", "checked": "2026-10-17", "value": 7.4}, "rt": {"value": 82.0, "title": "A Hidden Life (2019)", "url": "https://www.rottentomatoes.com/m/a_hidden_life_2019", "checked": "2026-10-17"}}, {"id": "film-the-master-2012", "title": "The Master", "year": 2012, "genres": ["Drama"], "description": "A restless veteran forms an intense, uneasy bond with the charismatic leader of a growing spiritual movement.", "poster": "assets/the-master.jpg", "imdb": {"url": "https://www.imdb.com/title/tt1560747/", "checked": "2026-10-17", "value": 7.1}, "rt": {"value": 85.0, "title": "The Master", "url": "https://www.rottentomatoes.com/m/the_master_2011", "checked": "2026-10-17"}}]'::jsonb) as m(id text,title text,year integer,genres text[],description text,poster text,imdb jsonb,rt jsonb)
+where not exists(select 1 from public.movies existing where (lower(existing.title)=lower(m.title) and existing.year=m.year) or existing.imdb->>'url'=m.imdb->>'url')
+on conflict(id) do nothing;
+
+-- Resolve the three suggestions approved by the hosts in this update.
+update public.suggestions s set reviewed=true
+where not reviewed and lower(trim(s.title)) in ('aguirre, the wrath of god','aguirre, the wrath of god (1972)','a hidden life','a hidden life (2019)','the master','the master (2012)');
+
+-- The hosts have already watched Mulholland Drive. Never alter an upcoming screening.
+update public.movies m set watched=true,active=false
+where (m.imdb->>'url'='https://www.imdb.com/title/tt0166924/' or (m.title='Mulholland Drive' and m.year=2001))
+  and not exists(select 1 from public.events e where e.movie_id=m.id and not e.cancelled and e.starts_at>now());
+
+
 notify pgrst, 'reload schema';
-select count(*) as seeded_movies from public.movies; -- Expected: 32
+select count(*) as seeded_movies from public.movies; -- Expected: 40
 commit;

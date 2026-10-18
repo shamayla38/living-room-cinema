@@ -24,7 +24,8 @@ window.MOVIES = [
       "date": "2001-10-19",
       "url": "https://www.rottentomatoes.com/m/mulholland_dr/",
       "checked": "2026-10-01"
-    }
+    },
+    "watched": true
   },
   {
     "title": "The Drama",
@@ -850,6 +851,196 @@ window.MOVIES = [
       "title": "Charulata",
       "url": "https://www.rottentomatoes.com/m/charulata",
       "checked": "2026-10-01"
+    }
+  },
+  {
+    "id": "film-sunshine-2007",
+    "title": "Sunshine",
+    "year": 2007,
+    "genres": [
+      "Sci-Fi",
+      "Thriller"
+    ],
+    "description": "A crew travels toward the dying sun on a desperate mission to reignite it in Danny Boyle’s tense space odyssey.",
+    "source": "https://en.wikipedia.org/wiki/Sunshine_(2007_film)",
+    "poster": "assets/sunshine.jpg",
+    "posterSource": "https://thumb.wikimedia.org/wikipedia/en/thumb/6/68/Sunshine_poster.jpg/250px-Sunshine_poster.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt0448134/",
+      "checked": "2026-10-17",
+      "value": 7.2
+    },
+    "rt": {
+      "value": 77.0,
+      "title": "Sunshine",
+      "url": "https://www.rottentomatoes.com/m/sunshine/",
+      "checked": "2026-10-17"
+    }
+  },
+  {
+    "id": "film-city-of-god-2002",
+    "title": "City of God",
+    "year": 2002,
+    "genres": [
+      "Crime",
+      "Drama"
+    ],
+    "description": "An aspiring photographer grows up amid friendship, ambition, and escalating gang violence in Rio de Janeiro.",
+    "source": "https://en.wikipedia.org/wiki/City_of_God_(2002_film)",
+    "poster": "assets/city-of-god.jpg",
+    "posterSource": "https://thumb.wikimedia.org/wikipedia/en/thumb/1/10/CidadedeDeus.jpg/250px-CidadedeDeus.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt0317248/",
+      "checked": "2026-10-17",
+      "value": 8.6
+    },
+    "rt": {
+      "value": 91.0,
+      "title": "City of God",
+      "url": "https://www.rottentomatoes.com/m/city_of_god",
+      "checked": "2026-10-17"
+    }
+  },
+  {
+    "id": "film-teenage-sex-and-death-at-camp-miasma-2026",
+    "title": "Teenage Sex and Death at Camp Miasma",
+    "year": 2026,
+    "genres": [
+      "Horror",
+      "Comedy"
+    ],
+    "description": "A filmmaker reviving a slasher franchise visits its reclusive original star and enters a strange world of desire and terror.",
+    "source": "https://en.wikipedia.org/wiki/Teenage_Sex_and_Death_at_Camp_Miasma",
+    "poster": "assets/teenage-sex-and-death-at-camp-miasma.jpg",
+    "posterSource": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/b0/Teenage_Sex_and_Death_at_Camp_Miasma_poster.jpg/250px-Teenage_Sex_and_Death_at_Camp_Miasma_poster.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt35298123/",
+      "checked": "2026-10-17",
+      "value": 6.5
+    },
+    "rt": {
+      "value": 94.0,
+      "title": "Teenage Sex and Death at Camp Miasma",
+      "url": "https://www.rottentomatoes.com/m/teenage_sex_and_death_at_camp_miasma",
+      "checked": "2026-10-17"
+    }
+  },
+  {
+    "id": "film-no-other-choice-2025",
+    "title": "No Other Choice",
+    "year": 2025,
+    "genres": [
+      "Thriller",
+      "Comedy"
+    ],
+    "description": "After losing his job, a desperate family man takes competition with other job seekers to murderous extremes.",
+    "source": "https://en.wikipedia.org/wiki/No_Other_Choice",
+    "poster": "assets/no-other-choice.jpg",
+    "posterSource": "https://thumb.wikimedia.org/wikipedia/en/thumb/1/12/No_Other_Choice_film_poster.jpeg/250px-No_Other_Choice_film_poster.jpeg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt1527793/",
+      "checked": "2026-10-17",
+      "value": 7.5
+    },
+    "rt": {
+      "value": 97.0,
+      "title": "No Other Choice",
+      "url": "https://www.rottentomatoes.com/m/no_other_choice",
+      "checked": "2026-10-17"
+    }
+  },
+  {
+    "id": "film-fire-of-love-2022",
+    "title": "Fire of Love",
+    "year": 2022,
+    "genres": [
+      "Documentary"
+    ],
+    "description": "Archival footage tells the story of volcanologists Katia and Maurice Krafft, united by their love for each other and erupting volcanoes.",
+    "source": "https://en.wikipedia.org/wiki/Fire_of_Love_(2022_film)",
+    "poster": "assets/fire-of-love.jpg",
+    "posterSource": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/9c/Fire_of_Love_poster.jpeg/250px-Fire_of_Love_poster.jpeg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt16227014/",
+      "checked": "2026-10-17",
+      "value": 7.6
+    },
+    "rt": {
+      "value": 98.0,
+      "title": "Fire of Love",
+      "url": "https://www.rottentomatoes.com/m/fire_of_love",
+      "checked": "2026-10-17"
+    }
+  },
+  {
+    "id": "film-aguirre-the-wrath-of-god-1972",
+    "title": "Aguirre, the Wrath of God",
+    "year": 1972,
+    "genres": [
+      "Adventure",
+      "Drama"
+    ],
+    "description": "A Spanish expedition searching the Amazon for El Dorado descends into obsession under a ruthless conquistador.",
+    "source": "https://en.wikipedia.org/wiki/Aguirre,_the_Wrath_of_God",
+    "poster": "assets/aguirre-the-wrath-of-god.jpg",
+    "posterSource": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/Aguirre%2C_The_Wrath_of_God_%28New_Yorker_Films%2C_1977%29.jpg/250px-Aguirre%2C_The_Wrath_of_God_%28New_Yorker_Films%2C_1977%29.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt0068182/",
+      "checked": "2026-10-17",
+      "value": 7.8
+    },
+    "rt": {
+      "value": 96.0,
+      "title": "Aguirre: The Wrath of God",
+      "url": "https://www.rottentomatoes.com/m/aguirre_the_wrath_of_god",
+      "checked": "2026-10-17"
+    }
+  },
+  {
+    "id": "film-a-hidden-life-2019",
+    "title": "A Hidden Life",
+    "year": 2019,
+    "genres": [
+      "Drama",
+      "History"
+    ],
+    "description": "An Austrian farmer’s refusal to swear loyalty to Hitler tests his faith and his family’s resolve.",
+    "source": "https://en.wikipedia.org/wiki/A_Hidden_Life_(2019_film)",
+    "poster": "assets/a-hidden-life.jpg",
+    "posterSource": "https://thumb.wikimedia.org/wikipedia/en/thumb/2/2d/HiddenLifePoster.jpeg/250px-HiddenLifePoster.jpeg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt5827916/",
+      "checked": "2026-10-17",
+      "value": 7.4
+    },
+    "rt": {
+      "value": 82.0,
+      "title": "A Hidden Life (2019)",
+      "url": "https://www.rottentomatoes.com/m/a_hidden_life_2019",
+      "checked": "2026-10-17"
+    }
+  },
+  {
+    "id": "film-the-master-2012",
+    "title": "The Master",
+    "year": 2012,
+    "genres": [
+      "Drama"
+    ],
+    "description": "A restless veteran forms an intense, uneasy bond with the charismatic leader of a growing spiritual movement.",
+    "source": "https://en.wikipedia.org/wiki/The_Master_(2012_film)",
+    "poster": "assets/the-master.jpg",
+    "posterSource": "https://upload.wikimedia.org/wikipedia/en/0/08/TheMaster2012Poster.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail_unscaled",
+    "imdb": {
+      "url": "https://www.imdb.com/title/tt1560747/",
+      "checked": "2026-10-17",
+      "value": 7.1
+    },
+    "rt": {
+      "value": 85.0,
+      "title": "The Master",
+      "url": "https://www.rottentomatoes.com/m/the_master_2011",
+      "checked": "2026-10-17"
     }
   }
 ];

@@ -96,6 +96,30 @@ test('PostgreSQL authorization, voting, booking, and delivery lifecycle', async 
     assert.match(definition, /update public\.settings set round_id=result where id = true/i);
     await assert.rejects(rpc('guest','set_vote',[round,'1',true]),/round changed/);
   });
+  await t.test('watched films preserve ballots and can be restored only by hosts', async () => {
+    const before = await rpc('guest','cinema_state');
+    await db.exec(await readFile('supabase/migrations/202610170001_watched_movies.sql','utf8'));
+    await db.exec(await readFile('supabase/migrations/202610170002_watchlist_additions.sql','utf8'));
+    const expanded = await rpc('guest','cinema_state');
+    assert.equal(expanded.movies.length,40); // Film 1 has an upcoming event and is not moved yet.
+    assert.equal(expanded.round.id,before.round.id);
+    await assert.rejects(rpc('host','set_movie_watched',['1',true]),/upcoming screening/);
+    await assert.rejects(rpc('guest','set_movie_watched',['2',true]),/Host access required/);
+    const currentRound=expanded.round.id;
+    await rpc('guest','set_vote',[currentRound,'2',true]);
+    await rpc('host','set_movie_watched',['2',true]);
+    let state=await rpc('guest','cinema_state');
+    assert.equal(state.movies.length,39);
+    assert.equal(state.watched[0].id,'2');
+    assert.equal(state.counts['2'],1);
+    await assert.rejects(rpc('guest','set_vote',[currentRound,'2',true]),/Invalid vote/);
+    await rpc('host','set_movie_watched',['2',false]);
+    state=await rpc('guest','cinema_state');
+    assert.equal(state.watched.length,0);
+    assert.equal(state.movies.length,40);
+    await db.exec(await readFile('supabase/migrations/202610170002_watchlist_additions.sql','utf8'));
+    assert.equal((await rpc('guest','cinema_state')).movies.length,40);
+  });
   await t.test('verified RSVP is idempotent, capacity bounded, and cancellable', async () => {
     await assert.rejects(rpc('guest','set_rsvp',[event,'Guest',true,true]),/Verify your email/);
     await assert.rejects(rpc('guest','set_subscription',[true]),/Verify your email/);

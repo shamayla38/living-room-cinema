@@ -10,7 +10,7 @@ const client = key => createClient(config.url, config.key, {
 // Email sign-in must not replace the browser's anonymous ballot identity.
 const voter = configured ? client('cinema-voter-v1') : null;
 const member = configured ? client('cinema-member-v1') : null;
-let state = { movies: window.MOVIES, counts: {}, mine: [], event: null, round: null };
+let state = { movies: window.MOVIES.filter(m => !m.watched), watched: window.MOVIES.filter(m => m.watched), counts: {}, mine: [], event: null, round: null };
 let ready = false;
 let toastTimer, captchaWidget, captchaLoader;
 const dialog = $('#dialog');
@@ -66,18 +66,23 @@ async function refresh() {
   $('#connection-status').hidden = true;
   render();
 }
-function render() {
-  $('#count').textContent = state.movies.length;
-  $('#movies').innerHTML = state.movies.map(m => {
+function movieCard(m, watched = false) {
     const mine = state.mine.includes(m.id), votes = count(m.id);
     const imdb = /^https:\/\/www\.imdb\.com\/title\/tt\d+\/$/.test(m.imdb?.url || '') ? m.imdb.url : 'https://www.imdb.com/';
     const rt = m.rt?.url?.startsWith('https://www.rottentomatoes.com/') ? m.rt.url : 'https://www.rottentomatoes.com/';
     return `<article class="movie"><div class="poster"><img src="${esc(safeImage(m.poster))}" data-movie="${esc(m.id)}" alt="${esc(m.title)} movie poster" loading="lazy" width="300" height="450"><span class="year">${m.year}</span></div>
       <h3>${esc(m.title)}</h3><p class="genres">${m.genres.map(esc).join(' · ')}</p>
       <div class="ratings"><a href="${imdb}" target="_blank" rel="noopener noreferrer"><span class="imdb-label">IMDb</span> ${ratingText(m.imdb?.value, 'imdb')}</a><a href="${esc(rt)}" target="_blank" rel="noopener noreferrer">🍅 ${ratingText(m.rt?.value, 'rt')}</a></div>
-      <p class="description">${esc(m.description)}</p><div class="vote-row"><button class="vote-button ${mine ? 'voted' : ''}" data-vote="${esc(m.id)}" aria-pressed="${mine}" aria-label="${mine ? 'Remove vote for' : 'Vote for'} ${esc(m.title)}" ${votingOpen() ? '' : 'disabled'}>${mine ? '✓ Voted' : '+ Vote'}</button><span class="vote-count">${votes} ${votes === 1 ? 'vote' : 'votes'}</span></div></article>`;
-  }).join('');
-  $('#movies').querySelectorAll('img').forEach(img => img.onerror = () => {
+      <p class="description">${esc(m.description)}</p>${watched ? '<p class="watched-badge">Already watched</p>' : `<div class="vote-row"><button class="vote-button ${mine ? 'voted' : ''}" data-vote="${esc(m.id)}" aria-pressed="${mine}" aria-label="${mine ? 'Remove vote for' : 'Vote for'} ${esc(m.title)}" ${votingOpen() ? '' : 'disabled'}>${mine ? '✓ Voted' : '+ Vote'}</button><span class="vote-count">${votes} ${votes === 1 ? 'vote' : 'votes'}</span></div>`}</article>`;
+}
+function render() {
+  $('#count').textContent = state.movies.length;
+  $('#movies').innerHTML = state.movies.map(m => movieCard(m)).join('');
+  const watched = state.watched || [];
+  $('#watched-section').hidden = !watched.length;
+  $('#watched-count').textContent = watched.length;
+  $('#watched-movies').innerHTML = watched.map(m => movieCard(m, true)).join('');
+  document.querySelectorAll('#movies img, #watched-movies img').forEach(img => img.onerror = () => {
     const local = window.MOVIES.find(m => m.id === img.dataset.movie)?.poster;
     img.onerror = () => { img.onerror = null; img.src = 'assets/poster-placeholder.svg'; };
     img.src = local || 'assets/poster-placeholder.svg';
@@ -94,7 +99,7 @@ function render() {
     } finally { button.disabled = !votingOpen(); }
   }));
   const e = state.event;
-  $('#screening-title').textContent = e ? state.movies.find(m => m.id === e.movie_id)?.title || 'Movie night' : 'The next pick is coming soon.';
+  $('#screening-title').textContent = e ? [...state.movies, ...(state.watched || [])].find(m => m.id === e.movie_id)?.title || 'Movie night' : 'The next pick is coming soon.';
   $('#screening-info').textContent = e ? `${eventLabel(e)} · ${Math.max(0, e.capacity-e.seats_taken)} of ${e.capacity} seats left` : '';
   $('#rsvp-open').disabled = !ready || !e;
   $('#rsvp-open').textContent = e ? 'RSVP / manage seat' : 'RSVP opens soon';
@@ -218,6 +223,7 @@ async function host() {
   openDialog(`<p class="eyebrow">HOST VIEW</p><h2>Set the scene</h2>
     ${e ? `<p>${esc(eventLabel(e))}</p><p>Published screenings are fixed so invitations remain accurate. Cancel this screening to replace it; guests must RSVP again.</p><button class="button" id="cancel-event">Cancel this screening</button>` : `<form id="event-form"><p>Hosts choose the winner and break ties. Publishing closes voting.</p><label for="film-pick">Film</label><select id="film-pick" name="movie">${[...state.movies].sort((a,b)=>count(b.id)-count(a.id)||a.title.localeCompare(b.title)).map(m=>`<option value="${esc(m.id)}">${esc(m.title)} (${m.year}) · ${count(m.id)} votes</option>`).join('')}</select>${field('date','Date and time in the event timezone','datetime-local')}${field('timezone','Event timezone','text','America/New_York')}${field('location','Location (visible on the website)','text','Our living room')}${field('capacity','Seats','number','12','min="1" max="100"')}<button>Publish screening</button></form>`}
     <hr><h2>Next voting round</h2><form id="round-form"><p>This starts fresh counts. Previous ballots remain in the database.</p>${field('cutoff','Voting closes (your browser timezone)','datetime-local')}<button>Open a new round</button></form>
+    <hr><h2>Already watched</h2><p>Move a film off the voting list after movie night, or bring it back for a rewatch.</p><form id="watched-form"><label for="watched-film">Film</label><select id="watched-film" name="movie">${[...state.movies, ...(state.watched || [])].sort((a,b)=>a.title.localeCompare(b.title)).map(m=>`<option value="${esc(m.id)}">${esc(m.title)} (${m.year})${m.watched ? ' · watched' : ''}</option>`).join('')}</select><label for="watched-status">Move to</label><select id="watched-status" name="watched"><option value="true">Already watched</option><option value="false">Watchlist</option></select><button>Move film</button></form>
     <hr><h2>Suggestions</h2>${data.suggestions.length ? data.suggestions.map(s=>`<div class="request"><strong>${esc(s.title)}</strong><p>${esc(s.name || 'A movie lover')}</p><button data-review="${s.id}">Review</button></div>`).join('') : '<p>No pending suggestions.</p>'}
     <hr><h2>Guest list</h2>${data.rsvps.map(r=>`<p>${esc(r.name)} · ${esc(r.email)}</p>`).join('') || '<p>No RSVPs yet.</p>'}<p>${data.subscribers} email subscribers</p>
     <h3>Email delivery</h3>${data.mail.map(m=>`<p>${esc(m.kind)}: ${m.count} ${esc(m.status)}</p>`).join('') || '<p>No messages queued yet. The scheduler checks every ten minutes.</p>'}`);
@@ -240,6 +246,10 @@ async function host() {
     if (!votingOpen()) throw new Error('The request completed, but voting still appears closed. Please check the cutoff and refresh before trying again.');
     dialog.close();
     toast(`Voting is open until ${new Date(state.round.closes_at).toLocaleString()}.`);
+  });
+  form('#watched-form', async f => {
+    await rpc(member, 'set_movie_watched', { p_movie: f.get('movie'), p_watched: f.get('watched') === 'true' });
+    await host(); toast('Film moved.');
   });
   document.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>review(data.suggestions.find(s=>s.id===b.dataset.review)));
 }

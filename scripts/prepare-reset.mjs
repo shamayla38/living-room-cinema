@@ -36,11 +36,11 @@ end
 $reset$;
 
 `;
-const files = ['supabase/migrations/202610020001_cinema.sql', 'supabase/migrations/202610020002_mail.sql', 'supabase/migrations/202610060001_fix_open_round.sql', 'supabase/seed.sql'];
+const files = ['supabase/migrations/202610020001_cinema.sql', 'supabase/migrations/202610020002_mail.sql', 'supabase/migrations/202610060001_fix_open_round.sql', 'supabase/seed.sql', 'supabase/migrations/202610170001_watched_movies.sql', 'supabase/migrations/202610170002_watchlist_additions.sql'];
 const chunks = await Promise.all(files.map(async path => `-- Source: ${path}\n${await readFile(path,'utf8')}\n`));
 await writeFile('supabase/reset-and-install.sql', reset + chunks.join('\n') + `
 notify pgrst, 'reload schema';
-select count(*) as seeded_movies from public.movies; -- Expected: 32
+select count(*) as seeded_movies from public.movies; -- Expected: 40
 commit;
 `);
 console.log('Prepared supabase/reset-and-install.sql. No database was changed.');

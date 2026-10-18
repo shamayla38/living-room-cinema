@@ -34,8 +34,11 @@ async function mockBackend(page) {
 test('unconfigured preview renders every poster and disables submissions',async ({page})=>{
   const errors=[]; page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');
-  await expect(page.locator('.movie')).toHaveCount(32);
+  await expect(page.locator('#movies .movie')).toHaveCount(39);
   await expect(page.locator('#connection-status')).toContainText('Preview only');
+  await expect(page.locator('#watched-movies .movie')).toHaveCount(1);
+  await expect(page.locator('#watched-movies')).toContainText('Mulholland Drive');
+  await expect(page.locator('#watched-movies [data-vote]')).toHaveCount(0);
   await expect(page.locator('[data-vote]').first()).toBeDisabled();
   await expect(page.locator('#suggest-open')).toBeDisabled();
   await page.setViewportSize({width:390,height:844});
